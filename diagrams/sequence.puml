@@ -1,0 +1,55 @@
+@startuml
+!theme plain
+title Protocol Sequence Diagram specification
+
+participant "Control Server/\nOrchestrator" as CS
+participant "Node" as N
+
+== Health Check ==
+CS -> N: GET /health
+alt Node is healthy
+    N -> CS: 200 OK\n{name, uptime, lastTraining}
+else Node is unavailable
+    N -> CS: 503 Service Unavailable
+end
+
+== Training Session ==
+CS -> N: POST /train\n{totalDischarges, timeoutSeconds}
+alt Node accepts job
+    N -> CS: 200 OK\n{expectedDischarges}
+    note right: expectedDischarges must equal totalDischarges
+else Node cannot train
+    N -> CS: 503 Service Unavailable
+end
+
+== Data Push (for each discharge) ==
+loop for ordinal = 1 to totalDischarges
+    CS -> N: POST /train/{ordinal}\n{Discharge data}
+    N -> CS: 200 OK\n{ordinal, totalDischarges}
+    note right: Node stores discharge data
+end
+
+note over N: After receiving last discharge,\nnode starts local training
+
+== Training Completion Callback ==
+N -> CS: POST /webhook (trainingCompleted)\n{status, message, trainingId, metrics, executionTimeMs}
+CS -> N: 200 OK (Acknowledged)
+
+== Prediction Request ==
+CS -> N: POST /predict\n{Discharge data}
+alt Node can predict
+    N -> CS: 200 OK\n{prediction, confidence, executionTimeMs, model}
+    note right: prediction: "Normal" or "Anomaly"
+else Node cannot predict
+    N -> CS: 503 Service Unavailable
+end
+
+note over CS, N
+**Key Data Structures:**
+• **Discharge**: {id, signals, times, length}
+• **Signal**: {filename, values[]}
+• **Metrics**: {accuracy, loss, f1Score}
+• **Prediction**: Normal/Anomaly classification with confidence
+end note
+
+@enduml

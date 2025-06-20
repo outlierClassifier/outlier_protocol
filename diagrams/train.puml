@@ -1,0 +1,30 @@
+@startuml
+!theme plain
+title Training Protocol
+
+participant Orchestrator
+participant "Node" as Node
+
+== Training Session ==
+Orchestrator -> Node: POST /train\n{\n  "totalDischarges": 8,\n  "timeoutSeconds": 300\n}
+
+alt Node accepts training
+    Node --> Orchestrator: 200 OK\n{\n  "expectedDischarges": 8\n}
+    
+    == Discharge Transfer ==
+    loop For each discharge (1 to totalDischarges)
+        Orchestrator -> Node: POST /train/{ordinal}\n{\n  "id": "discharge_001",\n  "signals": {...},\n  "times": [...],\n  "length": 1000\n}
+        Node --> Orchestrator: 200 OK\n{\n  "ordinal": 1,\n  "totalDischarges": 8\n}
+    end
+    
+    note right of Node: After receiving last discharge,\nnode starts training immediately
+    
+    == Training Completion ==
+    Node -> Orchestrator: POST /trainingCompleted\n(webhook)\n{\n  "status": "SUCCESS",\n  "message": "Training completed",\n  "trainingId": "train_123",\n  "metrics": {\n    "accuracy": 0.95,\n    "loss": 0.05,\n    "f1Score": 0.92\n  },\n  "executionTimeMs": 45000.0\n}
+    Orchestrator --> Node: 200 OK
+
+else Node cannot accept training
+    Node --> Orchestrator: 503 Service Unavailable
+end
+
+@enduml

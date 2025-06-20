@@ -1,0 +1,35 @@
+@startuml system architecture
+!theme plain
+title Node Protocol - Architecture Diagram
+
+package "Central Orchestrator" {
+    [Frontend] #LightBlue
+    [Backend] #LightGreen
+    Frontend --> Backend : API calls
+}
+
+Backend --> SVM_Node : GET /health\nPOST /train\nPOST /predict
+Backend --> XGBoost_Node : GET /health\nPOST /train\nPOST /predict
+Backend --> RandomForest_Node : GET /health\nPOST /train\nPOST /predict
+Backend --> N_Node : GET /health\nPOST /train\nPOST /predict
+
+SVM_Node ..> Backend : webhook:\ntrainingCompleted
+XGBoost_Node ..> Backend : webhook:\ntrainingCompleted
+RandomForest_Node ..> Backend : webhook:\ntrainingCompleted
+N_Node ..> Backend : webhook:\ntrainingCompleted
+
+note right of Frontend
+• User interface for interacting with the system
+• Displays node status and training progress
+• Allows data submission for training and prediction
+• Implements data visualization tools
+end note
+
+note right of Backend
+• Model health monitoring
+• Data distribution
+• Training coordination
+• Prediction aggregation
+end note
+
+@enduml

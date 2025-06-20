@@ -1,0 +1,20 @@
+@startuml prediction
+!theme plain
+title Prediction Protocol
+
+participant Orchestrator
+participant "Node" as Node
+
+== Prediction Request ==
+Orchestrator -> Node: POST /predict\n{\n  "id": "discharge_001",\n  "signals": {\n    "filename": "shot_12345.dat",\n    "values": [1.2, 1.5, 1.8, ...]\n  },\n  "times": [0.001, 0.002, 0.003, ...],\n  "length": 1000\n}
+
+alt Node can perform prediction
+    note right of Node: Node processes discharge\nand runs prediction model
+    
+    Node --> Orchestrator: 200 OK\n{\n  "prediction": "Anomaly",\n  "confidence": 0.93,\n  "executionTimeMs": 420.5,\n  "model": "svm"\n}
+
+else Node cannot perform prediction
+    Node --> Orchestrator: 503 Service Unavailable
+end
+
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+!theme plain
+title Health Check Protocol
+
+participant Orchestrator
+participant "Node" as Node
+
+== Health Check ==
+loop Variable intervals
+    Orchestrator -> Node: GET /health
+    alt Node is healthy
+        Node --> Orchestrator: 200 OK\n{\n  "name": "svm",\n  "uptime": 12345.67,\n  "lastTraining": "2025-06-12T08:15:30Z"\n}
+    else Node is unavailable
+        Node --> Orchestrator: 503 Service Unavailable
+    else Node doesn't respond
+        note right of Orchestrator: Consider node as unavailable\nDo not send data to this node
+    end
+end
+
+@enduml
