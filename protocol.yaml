@@ -204,6 +204,13 @@ components:
           type: integer
           minimum: 1
           description: Number of samples contained in each `signals.values`.
+        anomalyTime:
+          type: number
+          format: double
+          description: |
+            Time (in seconds) when the anomaly occurs within the discharge.
+            This field is only present for anomalous discharges used in training.
+            Normal discharges do not include this field.
     Signal:
       type: object
       required:
